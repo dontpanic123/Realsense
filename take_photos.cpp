@@ -1,6 +1,3 @@
-// This example is derived from the ssd_mobilenet_object_detection opencv demo
-// and adapted to be used with Intel RealSense Cameras
-// Please see https://github.com/opencv/opencv/blob/master/LICENSE
 
 #include <opencv2/dnn.hpp>
 #include <librealsense2/rs.hpp>
