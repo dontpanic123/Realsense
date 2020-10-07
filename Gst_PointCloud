@@ -34,6 +34,8 @@ public:
         depth_frame.x = W;
         depth_frame.y = H;
         depth_frame.bpp = BPP;
+
+
     }
 
     synthetic_frame& get_synthetic_texture()
@@ -63,38 +65,37 @@ public:
     {
 
         std::vector<uint8_t> pixels_color(color_frame.x * color_frame.y * color_frame.bpp, 0);
-        
-        GstSample* sample2;
-        auto now = std::chrono::high_resolution_clock::now();
-        if (now - last > std::chrono::milliseconds(1))
-        {
-            g_signal_emit_by_name(sink, "pull-sample", &sample2);
-            if (sample2) {
+        color_frame.frame = std::move(pixels_color);
 
-                sample2 = gst_app_sink_pull_sample(sink);
-                GstBuffer* buffer2 = gst_sample_get_buffer(sample2);
-                const GstStructure* info2 = gst_sample_get_info(sample2);
+        GstSample* sample2 = gst_app_sink_pull_sample(sink);
+       
+        g_signal_emit_by_name(sink, "pull-sample", &sample2);
+        if (sample2) {
+            GstBuffer* buffer2 = gst_sample_get_buffer(sample2);
+            //const GstStructure* info2 = gst_sample_get_info(sample2);
 
-                GstMapInfo map2;
-                gst_buffer_map(buffer2, &map2, GST_MAP_READ);
-                g_print(" get gst color ! ");
-                for (auto i = 0; i < color_frame.y; i++)
+            GstMapInfo map2;
+            gst_buffer_map(buffer2, &map2, GST_MAP_READ);
+           // g_print(" get gst color ! ");
+            
+            for (auto i = 0; i < color_frame.y; i++)
+            {
+                for (auto j = 0; j < color_frame.x*4; j+=4)
                 {
-                    for (auto j = 0; j < color_frame.x ; j ++)
-                    {
-                        ((uint16_t*)color_frame.frame.data())[i * color_frame.x  + j] = (int)(map2.data[i * color_frame.x  + j] );
-                    }
-                 }
-                //color_frame.frame = std::move(pixels_color);
+                    //std::cout << map2.data[i * color_frame.x + j] ;
+                  //color_frame.frame.data()[i * color_frame.x + j] = (int)(map2.data[i * color_frame.x + j]*0xff);
 
-
-                gst_buffer_unmap(buffer2, &map2);
-                gst_sample_unref(sample2);
-
-
-                //color_frame.frame = std::move(pixels_color);
+                    pixels_color.data()[i * color_frame.x * 4 + j] = (int)(map2.data[i * color_frame.x + j] );
+                    pixels_color.data()[i * color_frame.x * 4 + j + 1] = (int)(map2.data[i * color_frame.x + j+1] );
+                    pixels_color.data()[i * color_frame.x * 4 + j + 2] = (int)(map2.data[i * color_frame.x + j+2] );
+                }
             }
+
+
+            gst_buffer_unmap(buffer2, &map2);
+           
         }
+        gst_sample_unref(sample2);
         return color_frame;
     }
 
@@ -125,7 +126,7 @@ public:
         return depth_frame;
     }
 
-    synthetic_frame& get_gst_depth( GstAppSink* sink)
+    synthetic_frame& get_gst_depth(GstAppSink* sink)
     {
         draw_text(50, 50, "This point-cloud is generated from a gstreamer pipeline:");
 
@@ -134,38 +135,40 @@ public:
         depth_frame.frame = std::move(pixels_depth);
 
 
-        GstSample* sample1;
-        auto now = std::chrono::high_resolution_clock::now();
-        if (now - last > std::chrono::milliseconds(1))
+        //GstSample* sample1;
+        GstSample* sample1 = gst_app_sink_pull_sample(sink);
+       
+        // g_signal_emit_by_name(sink, "pull-sample", &sample1);
+        if (sample1) 
         {
-            g_signal_emit_by_name(sink, "pull-sample", &sample1);
-            if (sample1) {
 
-                sample1 = gst_app_sink_pull_sample(sink);
-                GstBuffer* buffer = gst_sample_get_buffer(sample1);
-                const GstStructure* info = gst_sample_get_info(sample1);
+           // sample1 = gst_app_sink_pull_sample(sink);
+            GstBuffer* buffer = gst_sample_get_buffer(sample1);
+           // const GstStructure* info = gst_sample_get_info(sample1);
 
-                GstMapInfo map;
-                gst_buffer_map(buffer, &map, GST_MAP_READ);
-                //g_print(" get gst depth ! ");
-                //(uint16_t*)depth_frame.frame.data() = (uint16_t)map.data;
-                for (int i = 0; i < depth_frame.y; i++)
+            GstMapInfo map;
+            gst_buffer_map(buffer, &map, GST_MAP_READ);
+            //g_print(" get gst depth ! ");
+            //(uint16_t*)depth_frame.frame.data() = (uint16_t)map.data;
+            for (int i = 0; i < depth_frame.y; i++)
+            {
+                for (int j = 0; j < depth_frame.x; j++)
                 {
-                    for (int j = 0; j < depth_frame.x; j++)
-                    {
-                        auto d = 2;
-                        ((uint16_t*)depth_frame.frame.data())[i * depth_frame.x + j] = (int)(map.data[i * depth_frame.x + j] * 0xff);
-                    }
+                    auto d = 2;
+                    ((uint16_t*)depth_frame.frame.data())[i * depth_frame.x + j] = (int)(map.data[i * depth_frame.x + j] * 0xff);
                 }
-
-                gst_buffer_unmap(buffer, &map);
-                gst_sample_unref(sample1);
-
             }
+
+            gst_buffer_unmap(buffer, &map);
+
         }
+            
+            gst_sample_unref(sample1);
+            //gst_object_unref(sink);
+        
         return depth_frame;
     }
-    
+
 
     rs2_intrinsics create_texture_intrinsics()
     {
@@ -208,7 +211,7 @@ using namespace std;
 typedef struct _CustomData
 {
     GstElement* pipeline1, * source1, * buffer1, * depay1, * decode1, * convert1, * sink1,
-              * pipeline2, * source2, * buffer2, * depay2, * decode2, * convert2, * sink2;
+        * pipeline2, * source2, * buffer2, * depay2, * decode2, * convert2, * sink2;
 
     guint64 num_samples;          /* Number of samples generated so far (for timestamp generation) */
     gfloat a, b, c, d;            /* For waveform generation */
@@ -222,7 +225,7 @@ typedef struct _CustomData
 
 /*synthetic_frame depth_frame;
 std::vector<uint8_t> pixels_depth(depth_frame.x* depth_frame.y* depth_frame.bpp, 0);
-// The appsink has received a buffer 
+// The appsink has received a buffer
 GstFlowReturn new_sample(GstAppSink* sink, CustomData* data)
 {
     //GstSample* sample;
@@ -231,7 +234,7 @@ GstFlowReturn new_sample(GstAppSink* sink, CustomData* data)
 
     depth_frame.frame = std::move(pixels_depth);
 
-    //Retrieve the buffer 
+    //Retrieve the buffer
    // g_signal_emit_by_name(sink, "pull-sample", &sample);
     if (sample) {
 
@@ -263,7 +266,7 @@ GstFlowReturn new_sample(GstAppSink* sink, CustomData* data)
 */
 
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[]) try{
     CustomData data;
     GstVideoInfo info;
     GstCaps* audio_caps;
@@ -291,11 +294,11 @@ int main(int argc, char* argv[]) {
     data.convert2 = gst_element_factory_make("videoconvert", "convert");
     //data.sink2 = gst_element_factory_make("autovideosink", "sink2");
     data.sink2 = gst_element_factory_make("appsink", "sink2");
-    
+
     /* Create the empty pipeline */
     data.pipeline1 = gst_pipeline_new("test-pipeline1");
     data.pipeline2 = gst_pipeline_new("test-pipeline2");
-    if (!data.pipeline1 || !data.source1 || !data.buffer1 || !data.depay1 || !data.decode1 || !data.convert1 || !data.sink1 || 
+    if (!data.pipeline1 || !data.source1 || !data.buffer1 || !data.depay1 || !data.decode1 || !data.convert1 || !data.sink1 ||
         !data.pipeline2 || !data.source2 || !data.buffer2 || !data.depay2 || !data.decode2 || !data.convert2 || !data.sink2) {
         g_printerr("Not all elements could be created.\n");
         return -1;
@@ -323,17 +326,17 @@ int main(int argc, char* argv[]) {
     bool set_sink = true;
     if (set_sink)
     {
-       // g_object_set(data.sink1, "emit-signals", TRUE, NULL);  //  Do we really need caps?
-        //g_signal_connect(data.sink2, "new-sample", G_CALLBACK(new_sample), &data);
-        /*
-                if (new_sample((GstAppSink*)data.sink2, &data) == GST_FLOW_OK)
-                {
-                    gst_app_sink_set_emit_signals((GstAppSink*)data.sink2, true);
-                    gst_app_sink_set_drop((GstAppSink*)data.sink2, true);
-                    gst_app_sink_set_max_buffers((GstAppSink*)data.sink2, 1);
-                }
-                */
-                // gst_caps_unref(audio_caps);
+        // g_object_set(data.sink1, "emit-signals", TRUE, NULL);  //  Do we really need caps?
+         //g_signal_connect(data.sink2, "new-sample", G_CALLBACK(new_sample), &data);
+         /*
+                 if (new_sample((GstAppSink*)data.sink2, &data) == GST_FLOW_OK)
+                 {
+                     gst_app_sink_set_emit_signals((GstAppSink*)data.sink2, true);
+                     gst_app_sink_set_drop((GstAppSink*)data.sink2, true);
+                     gst_app_sink_set_max_buffers((GstAppSink*)data.sink2, 1);
+                 }
+                 */
+                 // gst_caps_unref(audio_caps);
     }
 
 
@@ -403,12 +406,12 @@ int main(int argc, char* argv[]) {
 
     depth_sensor.add_read_only_option(RS2_OPTION_DEPTH_UNITS, 0.001f);
 
-   //cout << "texture_x:" << texture.x << endl << "texture_y:" << texture.y << endl << "texture.bpp:" << texture.bpp << endl;
-   cout << "W:" << W << endl << "H:" << H << endl << "BPP:" << BPP << endl;
-    auto color_stream = color_sensor.add_video_stream({ RS2_STREAM_COLOR, 0, 1, 
+    //cout << "texture_x:" << texture.x << endl << "texture_y:" << texture.y << endl << "texture.bpp:" << texture.bpp << endl;
+    cout << "W:" << W << endl << "H:" << H << endl << "BPP:" << BPP << endl;
+    auto color_stream = color_sensor.add_video_stream({ RS2_STREAM_COLOR, 0, 1,
                                 W, H, 60, BPP,
-                                RS2_FORMAT_RGBA8, color_intrinsics });
-   
+                                RS2_FORMAT_RGB8, color_intrinsics });
+
 
     dev.create_matcher(RS2_MATCHER_DLR_C);
     rs2::syncer sync;
@@ -423,22 +426,23 @@ int main(int argc, char* argv[]) {
 
     while (app) // Application still alive?
     {
-        //synthetic_frame& depth_frame = app_data.get_synthetic_depth(app_state);
-        //auto texture = app_data.get_synthetic_texture();
-       
+        // synthetic_frame& depth_frame = app_data.get_synthetic_depth(app_state);
+       // auto texture = app_data.get_synthetic_texture();
 
-        synthetic_frame& depth_frame = app_data.get_gst_depth((GstAppSink*)data.sink2);
 
-        //synthetic_frame& texture = app_data.get_gst_color( (GstAppSink*)data.sink1);
+        auto depth_frame = app_data.get_gst_depth((GstAppSink*)data.sink2);
+
+       // synthetic_frame& texture = app_data.get_gst_color( (GstAppSink*)data.sink1);
 
         depth_sensor.on_video_frame({ depth_frame.frame.data(), // Frame pixels from capture API
             [](void*) {}, // Custom deleter (if required)
             depth_frame.x * depth_frame.bpp, depth_frame.bpp, // Stride and Bytes-per-pixel
             (rs2_time_t)frame_number * 16, RS2_TIMESTAMP_DOMAIN_HARDWARE_CLOCK, frame_number, // Timestamp, Frame# for potential sync services
             depth_stream });
+       
 
 
-        color_sensor.on_video_frame({ texture.frame.data(), // Frame pixels from capture API
+       color_sensor.on_video_frame({ texture.frame.data(), // Frame pixels from capture API
             [](void*) {}, // Custom deleter (if required)
             texture.x * texture.bpp, texture.bpp, // Stride and Bytes-per-pixel
             (rs2_time_t)frame_number * 16, RS2_TIMESTAMP_DOMAIN_HARDWARE_CLOCK, frame_number, // Timestamp, Frame# for potential sync services
@@ -472,3 +476,14 @@ int main(int argc, char* argv[]) {
 
 
 }
+catch (const rs2::error& e)
+{
+    std::cerr << "RealSense error calling " << e.get_failed_function() << "(" << e.get_failed_args() << "):\n    " << e.what() << std::endl;
+    return EXIT_FAILURE;
+}
+catch (const std::exception& e)
+{
+    std::cerr << e.what() << std::endl;
+    return EXIT_FAILURE;
+}
+
