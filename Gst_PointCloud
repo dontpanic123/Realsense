@@ -16,12 +16,13 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 #define CHUNK_SIZE 7372800
-
+using namespace std;
 
 
 const int W = 640;
 const int H = 480;
 const int BPP = 2;
+const int BPP1 = 8;
 
 struct synthetic_frame
 {
@@ -40,7 +41,7 @@ public:
 
         color_frame.x = W;
         color_frame.y = H;
-        color_frame.bpp = BPP;
+        color_frame.bpp = BPP1;
     }
 
     synthetic_frame& get_synthetic_texture()
@@ -56,7 +57,7 @@ public:
             {
                 if (pixels_color.data()[i * color_frame.x * 4 + j] == 0)
                 {
-                    pixels_color.data()[i * color_frame.x * 4 + j] = 0;
+                    pixels_color.data()[i * color_frame.x * 4 + j] = 200;
                     pixels_color.data()[i * color_frame.x * 4 + j + 1] = 0;
                     pixels_color.data()[i * color_frame.x * 4 + j + 2] = 200;
 
@@ -67,15 +68,16 @@ public:
         return color_frame;
     }
 
-    synthetic_frame& get_gst_color(GstAppSink* sink)
+    synthetic_frame& get_gst_color(GstAppSink* sink1)
     {
-        auto realsense_logo = stbi_load_from_memory(splash, (int)splash_size, &color_frame.x, &color_frame.y, &color_frame.bpp, false);
+        //auto realsense_logo = stbi_load_from_memory(splash, (int)splash_size, &color_frame.x, &color_frame.y, &color_frame.bpp, false);
 
         std::vector<uint8_t> pixels_color(color_frame.x * color_frame.y * color_frame.bpp, 0);
-        std::cout << "W1:" << W << std::endl << "H1:" << H << std::endl << "BPP1:" << BPP << std::endl;
+        color_frame.frame = std::move(pixels_color);
+        std::cout << "W1:" << color_frame.x << std::endl << "H1:" << color_frame.y << std::endl << "BPP1:" << color_frame.bpp << std::endl;
         //memcpy(pixels_color.data(), realsense_logo, color_frame.x * color_frame.y*4);
 
-        GstSample* sample2 = gst_app_sink_pull_sample(sink);
+        GstSample* sample2 = gst_app_sink_pull_sample(sink1);
        
         if (sample2) {
             GstBuffer* buffer2 = gst_sample_get_buffer(sample2);
@@ -87,16 +89,17 @@ public:
 
             for (auto i = 0; i < color_frame.y; i++)
             {
-                for (auto j = 0; j < color_frame.x; j+=4)
+                for (auto j = 0; j < color_frame.x*4; j++)
                 {
-                    (pixels_color.data())[i * color_frame.x*4 + j] = (int)(map2.data[i * color_frame.x + j] );
-                    (pixels_color.data())[i * color_frame.x*4+ j + 1] = (int)(map2.data[i * color_frame.x + j+1] );
-                    (pixels_color.data())[i * color_frame.x*4 + j + 2] = (int)(map2.data[i * color_frame.x + j+2] );
+                    ((uint16_t*)color_frame.frame.data())[i * color_frame.x + j] = (int)(map2.data[i * color_frame.x + j] * 0xff);
+                    //(pixels_color.data())[i * color_frame.x*4 + j] = (int)(map2.data[i * color_frame.x + j] );
+                   // (pixels_color.data())[i * color_frame.x*4+ j + 1] = (int)(map2.data[i * color_frame.x + j+1] );
+                  //  (pixels_color.data())[i * color_frame.x*4 + j + 2] = (int)(map2.data[i * color_frame.x + j+2] );
                     
                 }
             }
           
-            color_frame.frame = std::move(pixels_color);
+            //color_frame.frame = std::move(pixels_color);
             
             gst_buffer_unmap(buffer2, &map2);
            
@@ -105,7 +108,6 @@ public:
           gst_sample_unref(sample2);
            return color_frame;
     }
-
 
     synthetic_frame& get_synthetic_depth(glfw_state& app_state)
     {
@@ -133,7 +135,7 @@ public:
         return depth_frame;
     }
 
-    synthetic_frame& get_gst_depth(GstAppSink* sink)
+    synthetic_frame& get_gst_depth(GstAppSink* sink2)
     {
         draw_text(50, 50, "This point-cloud is generated from a gstreamer pipeline:");
 
@@ -143,7 +145,7 @@ public:
 
 
         //GstSample* sample1;
-        GstSample* sample1 = gst_app_sink_pull_sample(sink);
+        GstSample* sample1 = gst_app_sink_pull_sample(sink2);
        
         // g_signal_emit_by_name(sink, "pull-sample", &sample1);
         if (sample1) 
@@ -205,10 +207,6 @@ private:
     float wave_base = 0.f;
 };
 
-
-
-using namespace std;
-
 //#define CHUNK_SIZE  614400       /* Amount of bytes we are sending in each buffer */
 //#define SAMPLE_RATE 44100       /* Samples per second we are sending */
 
@@ -218,7 +216,7 @@ using namespace std;
 typedef struct _CustomData
 {
     GstElement* pipeline1, * source1, * buffer1, * depay1, * decode1, * convert1, * sink1,
-        * pipeline2, * source2, * buffer2, * depay2, * decode2, * convert2, * sink2;
+              * pipeline2, * source2, * buffer2, * depay2, * decode2, * convert2, * sink2;
 
     guint64 num_samples;          /* Number of samples generated so far (for timestamp generation) */
     gfloat a, b, c, d;            /* For waveform generation */
@@ -276,7 +274,7 @@ GstFlowReturn new_sample(GstAppSink* sink, CustomData* data)
 int main(int argc, char* argv[]) try{
     CustomData data;
     GstVideoInfo info;
-    GstCaps* audio_caps;
+   //GstCaps* audio_caps;
     GstBus* bus;
 
     /* Initialize cumstom data structure */
@@ -299,12 +297,13 @@ int main(int argc, char* argv[]) try{
     data.depay2 = gst_element_factory_make("rtph264depay", "depay");
     data.decode2 = gst_element_factory_make("avdec_h264", "decode");
     data.convert2 = gst_element_factory_make("videoconvert", "convert");
-    //data.sink2 = gst_element_factory_make("autovideosink", "sink2");
-   data.sink2 = gst_element_factory_make("appsink", "sink2");
+    // data.sink2 = gst_element_factory_make("autovideosink", "sink2");
+    data.sink2 = gst_element_factory_make("appsink", "sink2");
 
     /* Create the empty pipeline */
     data.pipeline1 = gst_pipeline_new("test-pipeline1");
     data.pipeline2 = gst_pipeline_new("test-pipeline2");
+    
     if (!data.pipeline1 || !data.source1 || !data.buffer1 || !data.depay1 || !data.decode1 || !data.convert1 || !data.sink1 ||
         !data.pipeline2 || !data.source2 || !data.buffer2 || !data.depay2 || !data.decode2 || !data.convert2 || !data.sink2) {
         g_printerr("Not all elements could be created.\n");
@@ -328,10 +327,10 @@ int main(int argc, char* argv[]) try{
     /* Configure appsink */
     GstCaps* sink_caps;
     sink_caps = gst_caps_new_simple("video/x-raw", "Format", G_TYPE_STRING, "RGBA", NULL);
-    g_object_set(data.sink1, "caps", sink_caps, NULL);
+    //g_object_set(data.sink1, "caps", sink_caps, NULL);
     GstCaps* sink_caps2;
     sink_caps2 = gst_caps_new_simple("video/x-raw", "Format", G_TYPE_STRING, "GRAY16_LE", NULL);
-    g_object_set(data.sink2, "caps", sink_caps2, NULL);
+    //g_object_set(data.sink2, "caps", sink_caps2, NULL);
     /* Configure appsrc */
     //gst_video_info_set_format(&info, GST_VIDEO_FORMAT_UNKNOWN,  640,480);
    // audio_caps = gst_video_info_to_caps(&info);
@@ -404,7 +403,7 @@ int main(int argc, char* argv[]) try{
 
     custom_frame_source app_data;
 
-    // auto color_frame = app_data.get_synthetic_texture();
+    //auto color_frame = app_data.get_synthetic_texture();
       synthetic_frame& color_frame = app_data.get_gst_color( (GstAppSink*)data.sink1);
 
     rs2_intrinsics color_intrinsics = app_data.create_texture_intrinsics();
@@ -424,8 +423,8 @@ int main(int argc, char* argv[]) try{
     //cout << "texture_x:" << texture.x << endl << "texture_y:" << texture.y << endl << "texture.bpp:" << texture.bpp << endl;
     cout << "W:" << W << endl << "H:" << H << endl << "BPP:" << BPP << endl;
     auto color_stream = color_sensor.add_video_stream({ RS2_STREAM_COLOR, 0, 1,
-                                W, H, 60, BPP,
-                                RS2_FORMAT_RGBA8, color_intrinsics });
+                                color_frame.x, color_frame.y, 60, color_frame.bpp,                        //THESE parameter is for the size of color frame
+                                RS2_FORMAT_Y10BPACK, color_intrinsics });
 
 
     dev.create_matcher(RS2_MATCHER_DLR_C);
@@ -451,7 +450,7 @@ int main(int argc, char* argv[]) try{
       
 
        auto depth_frame = app_data.get_gst_depth((GstAppSink*)data.sink2);
-        //auto color_frame = app_data.get_gst_color((GstAppSink*)data.sink1);
+       //auto color_frame = app_data.get_gst_color((GstAppSink*)data.sink1);
         
 
         depth_sensor.on_video_frame({ depth_frame.frame.data(), // Frame pixels from capture API
