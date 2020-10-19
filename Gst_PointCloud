@@ -74,39 +74,40 @@ public:
 
         std::vector<uint8_t> pixels_color(color_frame.x * color_frame.y * color_frame.bpp, 0);
         color_frame.frame = std::move(pixels_color);
-        std::cout << "W1:" << color_frame.x << std::endl << "H1:" << color_frame.y << std::endl << "BPP1:" << color_frame.bpp << std::endl;
+        //std::cout << "W1:" << color_frame.x << std::endl << "H1:" << color_frame.y << std::endl << "BPP1:" << color_frame.bpp << std::endl;
         //memcpy(pixels_color.data(), realsense_logo, color_frame.x * color_frame.y*4);
 
-        GstSample* sample2 = gst_app_sink_pull_sample(sink1);
-       
-        if (sample2) {
-            GstBuffer* buffer2 = gst_sample_get_buffer(sample2);
-            GstMapInfo map2;
-            gst_buffer_map(buffer2, &map2, GST_MAP_READ);
-           // g_print(" get gst color ! ");
+        GstSample* sample = gst_app_sink_pull_sample(sink1);
 
-           // memcpy(pixels_color.data(), (char*)map2.data, color_frame.x * color_frame.y * 4);
+        if (sample) 
+        {
+            GstBuffer* buffer = gst_sample_get_buffer(sample);
+            GstMapInfo map;
+            gst_buffer_map(buffer, &map, GST_MAP_READ);
+            // g_print(" get gst color ! ");
+
+            // memcpy(pixels_color.data(), (char*)map2.data, color_frame.x * color_frame.y * 4);
 
             for (auto i = 0; i < color_frame.y; i++)
             {
-                for (auto j = 0; j < color_frame.x*4; j++)
+                for (auto j = 0; j < color_frame.x ; j++)
                 {
-                    ((uint16_t*)color_frame.frame.data())[i * color_frame.x + j] = (int)(map2.data[i * color_frame.x + j] * 0xff);
+                    ((uint16_t*)color_frame.frame.data())[i * color_frame.x + j] = (int)(map.data[i * color_frame.x + j] * 0xff);
                     //(pixels_color.data())[i * color_frame.x*4 + j] = (int)(map2.data[i * color_frame.x + j] );
                    // (pixels_color.data())[i * color_frame.x*4+ j + 1] = (int)(map2.data[i * color_frame.x + j+1] );
                   //  (pixels_color.data())[i * color_frame.x*4 + j + 2] = (int)(map2.data[i * color_frame.x + j+2] );
-                    
+
                 }
             }
-          
+
             //color_frame.frame = std::move(pixels_color);
-            
-            gst_buffer_unmap(buffer2, &map2);
-           
+
+            gst_buffer_unmap(buffer, &map);
+
         }
 
-          gst_sample_unref(sample2);
-           return color_frame;
+        gst_sample_unref(sample);
+        return color_frame;
     }
 
     synthetic_frame& get_synthetic_depth(glfw_state& app_state)
@@ -146,14 +147,14 @@ public:
 
         //GstSample* sample1;
         GstSample* sample1 = gst_app_sink_pull_sample(sink2);
-       
+
         // g_signal_emit_by_name(sink, "pull-sample", &sample1);
-        if (sample1) 
+        if (sample1)
         {
 
-           // sample1 = gst_app_sink_pull_sample(sink);
+            // sample1 = gst_app_sink_pull_sample(sink);
             GstBuffer* buffer = gst_sample_get_buffer(sample1);
-           // const GstStructure* info = gst_sample_get_info(sample1);
+            // const GstStructure* info = gst_sample_get_info(sample1);
 
             GstMapInfo map;
             gst_buffer_map(buffer, &map, GST_MAP_READ);
@@ -171,10 +172,10 @@ public:
             gst_buffer_unmap(buffer, &map);
 
         }
-            
-            gst_sample_unref(sample1);
-            //gst_object_unref(sink);
-        
+
+        gst_sample_unref(sample1);
+        //gst_object_unref(sink);
+
         return depth_frame;
     }
 
@@ -216,7 +217,7 @@ private:
 typedef struct _CustomData
 {
     GstElement* pipeline1, * source1, * buffer1, * depay1, * decode1, * convert1, * sink1,
-              * pipeline2, * source2, * buffer2, * depay2, * decode2, * convert2, * sink2;
+        * pipeline2, * source2, * buffer2, * depay2, * decode2, * convert2, * sink2;
 
     guint64 num_samples;          /* Number of samples generated so far (for timestamp generation) */
     gfloat a, b, c, d;            /* For waveform generation */
@@ -271,10 +272,10 @@ GstFlowReturn new_sample(GstAppSink* sink, CustomData* data)
 */
 
 
-int main(int argc, char* argv[]) try{
+int main(int argc, char* argv[]) try {
     CustomData data;
     GstVideoInfo info;
-   //GstCaps* audio_caps;
+    //GstCaps* audio_caps;
     GstBus* bus;
 
     /* Initialize cumstom data structure */
@@ -289,8 +290,8 @@ int main(int argc, char* argv[]) try{
     data.depay1 = gst_element_factory_make("rtph264depay", "depay");
     data.decode1 = gst_element_factory_make("avdec_h264", "decode");
     data.convert1 = gst_element_factory_make("videoconvert", "convert");
-    // data.sink1 = gst_element_factory_make("autovideosink", "sink1");
-    data.sink1 = gst_element_factory_make("appsink", "sink1");
+    //data.sink1 = gst_element_factory_make("autovideosink", "sink1");
+     data.sink1 = gst_element_factory_make("appsink", "sink1");
 
     data.source2 = gst_element_factory_make("udpsrc", "source2");
     data.buffer2 = gst_element_factory_make("rtpjitterbuffer", "buffer2");
@@ -303,7 +304,7 @@ int main(int argc, char* argv[]) try{
     /* Create the empty pipeline */
     data.pipeline1 = gst_pipeline_new("test-pipeline1");
     data.pipeline2 = gst_pipeline_new("test-pipeline2");
-    
+
     if (!data.pipeline1 || !data.source1 || !data.buffer1 || !data.depay1 || !data.decode1 || !data.convert1 || !data.sink1 ||
         !data.pipeline2 || !data.source2 || !data.buffer2 || !data.depay2 || !data.decode2 || !data.convert2 || !data.sink2) {
         g_printerr("Not all elements could be created.\n");
@@ -318,7 +319,7 @@ int main(int argc, char* argv[]) try{
         return -1;
     }
     /* Modify the source's properties */
- 
+
     g_object_set(data.source1, "port", 8554, NULL);
     g_object_set(data.source1, "caps", caps, NULL);
     g_object_set(data.source2, "port", 8564, NULL);
@@ -327,7 +328,7 @@ int main(int argc, char* argv[]) try{
     /* Configure appsink */
     GstCaps* sink_caps;
     sink_caps = gst_caps_new_simple("video/x-raw", "Format", G_TYPE_STRING, "RGBA", NULL);
-    //g_object_set(data.sink1, "caps", sink_caps, NULL);
+    g_object_set(data.sink1, "caps", sink_caps, NULL);
     GstCaps* sink_caps2;
     sink_caps2 = gst_caps_new_simple("video/x-raw", "Format", G_TYPE_STRING, "GRAY16_LE", NULL);
     //g_object_set(data.sink2, "caps", sink_caps2, NULL);
@@ -342,14 +343,14 @@ int main(int argc, char* argv[]) try{
     {
         // g_object_set(data.sink1, "emit-signals", TRUE, NULL);  //  Do we really need caps?
          //g_signal_connect(data.sink2, "new-sample", G_CALLBACK(new_sample), &data);
-         
+
                  if (new_sample((GstAppSink*)data.sink2, &data) == GST_FLOW_OK)
                  {
                      gst_app_sink_set_emit_signals((GstAppSink*)data.sink2, true);
                      gst_app_sink_set_drop((GstAppSink*)data.sink2, true);
                      gst_app_sink_set_max_buffers((GstAppSink*)data.sink2, 1);
                  }
-                 
+
                  // gst_caps_unref(audio_caps);
     }
     */
@@ -403,8 +404,6 @@ int main(int argc, char* argv[]) try{
 
     custom_frame_source app_data;
 
-    //auto color_frame = app_data.get_synthetic_texture();
-      synthetic_frame& color_frame = app_data.get_gst_color( (GstAppSink*)data.sink1);
 
     rs2_intrinsics color_intrinsics = app_data.create_texture_intrinsics();
     rs2_intrinsics depth_intrinsics = app_data.create_depth_intrinsics();
@@ -423,7 +422,7 @@ int main(int argc, char* argv[]) try{
     //cout << "texture_x:" << texture.x << endl << "texture_y:" << texture.y << endl << "texture.bpp:" << texture.bpp << endl;
     cout << "W:" << W << endl << "H:" << H << endl << "BPP:" << BPP << endl;
     auto color_stream = color_sensor.add_video_stream({ RS2_STREAM_COLOR, 0, 1,
-                                color_frame.x, color_frame.y, 60, color_frame.bpp,                        //THESE parameter is for the size of color frame
+                                W, H, 60, BPP,                        //THESE parameter is for the size of color frame
                                 RS2_FORMAT_Y10BPACK, color_intrinsics });
 
 
@@ -439,33 +438,35 @@ int main(int argc, char* argv[]) try{
     depth_stream.register_extrinsics_to(color_stream, { { 1,0,0,0,1,0,0,0,1 },{ 0,0,0 } });
 
 
+
+    //auto color_frame = app_data.get_synthetic_texture();
    
 
     while (app) // Application still alive?
     {
         // synthetic_frame& depth_frame = app_data.get_synthetic_depth(app_state);
        // auto color_frame = app_data.get_synthetic_texture();
-        
 
-      
 
-       auto depth_frame = app_data.get_gst_depth((GstAppSink*)data.sink2);
-       //auto color_frame = app_data.get_gst_color((GstAppSink*)data.sink1);
-        
+
+        auto color_frame = app_data.get_gst_color((GstAppSink*)data.sink1);
+        auto depth_frame = app_data.get_gst_depth((GstAppSink*)data.sink2);
+        //auto color_frame = app_data.get_gst_color((GstAppSink*)data.sink1);
+
 
         depth_sensor.on_video_frame({ depth_frame.frame.data(), // Frame pixels from capture API
             [](void*) {}, // Custom deleter (if required)
             depth_frame.x * depth_frame.bpp, depth_frame.bpp, // Stride and Bytes-per-pixel
             (rs2_time_t)frame_number * 16, RS2_TIMESTAMP_DOMAIN_HARDWARE_CLOCK, frame_number, // Timestamp, Frame# for potential sync services
             depth_stream });
-       
 
 
-       color_sensor.on_video_frame({ color_frame.frame.data(), // Frame pixels from capture API
-            [](void*) {}, // Custom deleter (if required)
-            color_frame.x * color_frame.bpp, color_frame.bpp, // Stride and Bytes-per-pixel
-            (rs2_time_t)frame_number * 16, RS2_TIMESTAMP_DOMAIN_HARDWARE_CLOCK, frame_number, // Timestamp, Frame# for potential sync services
-            color_stream });
+
+        color_sensor.on_video_frame({ color_frame.frame.data(), // Frame pixels from capture API
+             [](void*) {}, // Custom deleter (if required)
+             color_frame.x * color_frame.bpp, color_frame.bpp, // Stride and Bytes-per-pixel
+             (rs2_time_t)frame_number * 16, RS2_TIMESTAMP_DOMAIN_HARDWARE_CLOCK, frame_number, // Timestamp, Frame# for potential sync services
+             color_stream });
 
         ++frame_number;
 
@@ -505,4 +506,3 @@ catch (const std::exception& e)
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
 }
-
