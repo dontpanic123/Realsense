@@ -72,7 +72,7 @@ public:
     {
         //auto realsense_logo = stbi_load_from_memory(splash, (int)splash_size, &color_frame.x, &color_frame.y, &color_frame.bpp, false);
 
-        std::vector<uint8_t> pixels_color(color_frame.x * color_frame.y * color_frame.bpp, 0);
+        std::vector<uint8_t> pixels_color(color_frame.x * color_frame.y*2 , 0);
         color_frame.frame = std::move(pixels_color);
         //std::cout << "W1:" << color_frame.x << std::endl << "H1:" << color_frame.y << std::endl << "BPP1:" << color_frame.bpp << std::endl;
         //memcpy(pixels_color.data(), realsense_logo, color_frame.x * color_frame.y*4);
@@ -109,6 +109,51 @@ public:
         gst_sample_unref(sample);
         return color_frame;
     }
+    synthetic_frame& get_gst_color_pixel(GstAppSink* sink1)
+    {
+        //auto realsense_logo = stbi_load_from_memory(splash, (int)splash_size, &color_frame.x, &color_frame.y, &color_frame.bpp, false);
+
+        std::vector<uint8_t> pixels_color(color_frame.x * color_frame.y * color_frame.bpp*4, 0);
+        
+        //std::cout << "W1:" << color_frame.x << std::endl << "H1:" << color_frame.y << std::endl << "BPP1:" << color_frame.bpp << std::endl;
+        //memcpy(pixels_color.data(), realsense_logo, color_frame.x * color_frame.y*4);
+
+        GstSample* sample = gst_app_sink_pull_sample(sink1);
+
+        if (sample)
+        {
+            GstBuffer* buffer = gst_sample_get_buffer(sample);
+            GstMapInfo map;
+            gst_buffer_map(buffer, &map, GST_MAP_READ);
+            // g_print(" get gst color ! ");
+
+            // memcpy(pixels_color.data(), (char*)map2.data, color_frame.x * color_frame.y * 4);
+
+            for (auto i = 0; i < color_frame.y; i++)
+            {
+                for (auto j = 0; j < color_frame.x*4; j+=4)
+                {
+                   // ((uint16_t*)color_frame.frame.data())[i * color_frame.x + j] = (int)(map.data[i * color_frame.x + j] * 0xff);
+                    pixels_color.data()[i * color_frame.x * 4 + j] = map.data[i * color_frame.x * 4 + j] * 0xff;
+                    pixels_color.data()[i * color_frame.x * 4 + j + 1] = map.data[i * color_frame.x * 4 + j+1] * 0xff;
+                    pixels_color.data()[i * color_frame.x * 4 + j + 2] = map.data[i * color_frame.x * 4 + j+2] * 0xff;
+
+                }
+            }
+
+            
+            color_frame.frame = std::move(pixels_color);
+
+
+            gst_buffer_unmap(buffer, &map);
+
+        }
+
+        gst_sample_unref(sample);
+        return color_frame;
+    }
+
+
 
     synthetic_frame& get_synthetic_depth(glfw_state& app_state)
     {
@@ -184,7 +229,7 @@ public:
     {
         rs2_intrinsics intrinsics = { color_frame.x, color_frame.y,
             (float)color_frame.x / 2, (float)color_frame.y / 2,
-            (float)color_frame.x / 2, (float)color_frame.y / 2,
+            (float)color_frame.x /0.7, (float)color_frame.y/0.7 ,
             RS2_DISTORTION_BROWN_CONRADY ,{ 0,0,0,0,0 } };
 
         return intrinsics;
@@ -408,6 +453,8 @@ int main(int argc, char* argv[]) try {
     rs2_intrinsics color_intrinsics = app_data.create_texture_intrinsics();
     rs2_intrinsics depth_intrinsics = app_data.create_depth_intrinsics();
 
+    
+
     rs2::software_device dev; // Create software-only device
 
     auto depth_sensor = dev.add_sensor("Depth"); // Define single sensor
@@ -423,7 +470,7 @@ int main(int argc, char* argv[]) try {
     cout << "W:" << W << endl << "H:" << H << endl << "BPP:" << BPP << endl;
     auto color_stream = color_sensor.add_video_stream({ RS2_STREAM_COLOR, 0, 1,
                                 W, H, 60, BPP,                        //THESE parameter is for the size of color frame
-                                RS2_FORMAT_Y10BPACK, color_intrinsics });
+                                RS2_FORMAT_Y10BPACK, color_intrinsics }); //
 
 
     dev.create_matcher(RS2_MATCHER_DLR_C);
@@ -435,7 +482,9 @@ int main(int argc, char* argv[]) try {
     depth_sensor.start(sync);
     color_sensor.start(sync);
 
-    depth_stream.register_extrinsics_to(color_stream, { { 1,0,0,0,1,0,0,0,1 },{ 0,0,0 } });
+    depth_stream.register_extrinsics_to(color_stream, { { 0.999927,-0.0116198,-0.00342654,
+                                                          0.0116159,0.999932,-0.00114862,
+                                                          0.00343965,0.00110873,0.999993 },{ 0,0.00013954,0.000115604 } });
 
 
 
@@ -448,8 +497,8 @@ int main(int argc, char* argv[]) try {
        // auto color_frame = app_data.get_synthetic_texture();
 
 
-
         auto color_frame = app_data.get_gst_color((GstAppSink*)data.sink1);
+        //auto color_frame = app_data.get_gst_color_pixel((GstAppSink*)data.sink1);
         auto depth_frame = app_data.get_gst_depth((GstAppSink*)data.sink2);
         //auto color_frame = app_data.get_gst_color((GstAppSink*)data.sink1);
 
