@@ -299,25 +299,25 @@ int main(int argc, char* argv[]) try {
     data.depay2 = gst_element_factory_make("rtph264depay", "depay");
     data.decode2 = gst_element_factory_make("avdec_h264", "decode");
     data.convert2 = gst_element_factory_make("videoconvert", "convert");
-    // data.sink2 = gst_element_factory_make("autovideosink", "sink2");
-    data.sink2 = gst_element_factory_make("appsink", "sink2");
+    data.sink2 = gst_element_factory_make("autovideosink", "sink2");
+    //data.sink2 = gst_element_factory_make("appsink", "sink2");
 
 
     data.source3 = gst_element_factory_make("udpsrc", "source3");
     data.buffer3 = gst_element_factory_make("rtpjitterbuffer", "buffer3");
-    data.depay3 = gst_element_factory_make("rtph264depay", "depay");
-    data.decode3 = gst_element_factory_make("avdec_h264", "decode");
-    data.convert3 = gst_element_factory_make("videoconvert", "convert");
+    data.depay3 = gst_element_factory_make("rtph264depay", "depay3");
+    data.decode3 = gst_element_factory_make("avdec_h264", "decode3");
+    data.convert3 = gst_element_factory_make("videoconvert", "convert3");
     data.sink3 = gst_element_factory_make("autovideosink", "sink3");
     //data.sink3 = gst_element_factory_make("appsink", "sink3");
 
     data.source4 = gst_element_factory_make("udpsrc", "source4");
     data.buffer4 = gst_element_factory_make("rtpjitterbuffer", "buffer4");
-    data.depay4 = gst_element_factory_make("rtph264depay", "depay");
-    data.decode4 = gst_element_factory_make("avdec_h264", "decode");
-    data.convert4 = gst_element_factory_make("videoconvert", "convert");
-    // data.sink4 = gst_element_factory_make("autovideosink", "sink4");
-    data.sink4 = gst_element_factory_make("appsink", "sink4");
+    data.depay4 = gst_element_factory_make("rtph264depay", "depay4");
+    data.decode4 = gst_element_factory_make("avdec_h264", "decode4");
+    data.convert4 = gst_element_factory_make("videoconvert", "convert4");
+    data.sink4 = gst_element_factory_make("autovideosink", "sink4");
+     //data.sink4 = gst_element_factory_make("appsink", "sink4");
 
 
 
@@ -355,6 +355,12 @@ int main(int argc, char* argv[]) try {
     g_object_set(data.source2, "port", 8564, NULL);
     g_object_set(data.source2, "caps", caps, NULL);
 
+    g_object_set(data.source3, "port", 4400, NULL);
+    g_object_set(data.source3, "caps", caps, NULL);
+
+    g_object_set(data.source4, "port", 4510, NULL);
+    g_object_set(data.source4, "caps", caps, NULL);
+
     /* Configure appsink */
     GstCaps* sink_caps;
     sink_caps = gst_caps_new_simple("video/x-raw", "Format", G_TYPE_STRING, "RGBA", NULL);
@@ -377,6 +383,18 @@ int main(int argc, char* argv[]) try {
         return -1;
     }
 
+    gst_bin_add_many(GST_BIN(data.pipeline3), data.source3, data.buffer3, data.depay3, data.decode3, data.convert3, data.sink3, NULL);
+    if (gst_element_link_many(data.source3, data.buffer3, data.depay3, data.decode3, data.convert3, data.sink3)) {
+        g_printerr("Elements could not be linked.\n");
+        gst_object_unref(data.pipeline3);
+        return -1;
+    }
+    gst_bin_add_many(GST_BIN(data.pipeline4), data.source4, data.buffer4, data.depay4, data.decode4, data.convert4, data.sink4, NULL);
+    if (gst_element_link_many(data.source4, data.buffer4, data.depay4, data.decode4, data.convert4, data.sink4)) {
+        g_printerr("Elements could not be linked.\n");
+        gst_object_unref(data.pipeline4);
+        return -1;
+    }
 
 
 
@@ -388,7 +406,8 @@ int main(int argc, char* argv[]) try {
     /* Start playing the pipeline */
     gst_element_set_state(data.pipeline1, GST_STATE_PLAYING);
     gst_element_set_state(data.pipeline2, GST_STATE_PLAYING);
-    
+    gst_element_set_state(data.pipeline3, GST_STATE_PLAYING);
+    gst_element_set_state(data.pipeline4, GST_STATE_PLAYING);
 
 
     // $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$      Software Device        §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§
@@ -396,14 +415,18 @@ int main(int argc, char* argv[]) try {
 
     window app(1280, 1500, "Gstreamer Capture Example");
     glfw_state app_state;
+    glfw_state app_state1;
     register_glfw_callbacks(app, app_state);
     //rs2::colorizer color_map; // Save colorized depth for preview
 
     rs2::pointcloud pc;
     rs2::points points;
+    rs2::pointcloud pc1;
+    rs2::points points1;
     int frame_number = 0;
 
     custom_frame_source app_data;
+    //custom_frame_source app_data1;
 
 
     rs2_intrinsics color_intrinsics = app_data.create_texture_intrinsics();
@@ -416,6 +439,12 @@ int main(int argc, char* argv[]) try {
     auto depth_sensor = dev.add_sensor("Depth"); // Define single sensor
     auto color_sensor = dev.add_sensor("Color"); // Define single sensor
 
+
+    rs2::software_device dev1; // Create software-only device
+
+    auto depth_sensor1 = dev1.add_sensor("Depth"); // Define single sensor
+    auto color_sensor1 = dev1.add_sensor("Color"); // Define single sensor
+
     auto depth_stream = depth_sensor.add_video_stream({ RS2_STREAM_DEPTH, 0, 0,
                                 W, H, 60, BPP,
                                 RS2_FORMAT_Z16, depth_intrinsics });
@@ -423,25 +452,35 @@ int main(int argc, char* argv[]) try {
     depth_sensor.add_read_only_option(RS2_OPTION_DEPTH_UNITS, 0.001f);
 
     //cout << "texture_x:" << texture.x << endl << "texture_y:" << texture.y << endl << "texture.bpp:" << texture.bpp << endl;
-    cout << "W:" << W << endl << "H:" << H << endl << "BPP:" << BPP << endl;
+   
     auto color_stream = color_sensor.add_video_stream({ RS2_STREAM_COLOR, 0, 1,
                                 W, H, 60, BPP,                        //THESE parameter is for the size of color frame
                                 RS2_FORMAT_RGBA8, color_intrinsics }); //Y10BPACK
 
 
-    dev.create_matcher(RS2_MATCHER_DLR_C);
-    rs2::syncer sync;
 
+
+   
+
+    dev.create_matcher(RS2_MATCHER_DLR_C);
+
+ 
+    rs2::syncer sync;
+    rs2::syncer sync1;
     depth_sensor.open(depth_stream);
     color_sensor.open(color_stream);
 
     depth_sensor.start(sync);
     color_sensor.start(sync);
 
+   
+
+
     depth_stream.register_extrinsics_to(color_stream, { { 0.999927,-0.0116198,-0.00342654,
                                                           0.0116159,0.999932,-0.00114862,
                                                           0.00343965,0.00110873,0.999993 },{ 0,0.00013954,0.000115604 } });
 
+   
 
 
     auto color_frame = app_data.get_synthetic_texture(200, 100, 0);
@@ -449,13 +488,14 @@ int main(int argc, char* argv[]) try {
 
     while (app) // Application still alive?
     {
-        //synthetic_frame& depth_frame = app_data.get_synthetic_depth(app_state);
+        synthetic_frame& depth_frame = app_data.get_synthetic_depth(app_state);
         //auto color_frame = app_data.get_synthetic_texture(200,100,0);
 
 
        // auto color_frame = app_data.get_gst_color((GstAppSink*)data.sink1);
         //auto color_frame = app_data.get_gst_color_pixel((GstAppSink*)data.sink1);
-        auto depth_frame = app_data.get_gst_depth((GstAppSink*)data.sink2);
+       // auto depth_frame = app_data.get_gst_depth((GstAppSink*)data.sink2);
+       
         //auto color_frame = app_data.get_gst_color((GstAppSink*)data.sink1);
 
 
@@ -473,13 +513,19 @@ int main(int argc, char* argv[]) try {
              (rs2_time_t)frame_number * 16, RS2_TIMESTAMP_DOMAIN_HARDWARE_CLOCK, frame_number, // Timestamp, Frame# for potential sync services
              color_stream });
 
+
+       
+
+      
         ++frame_number;
 
         rs2::frameset fset = sync.wait_for_frames();
         rs2::frame depth = fset.first_or_default(RS2_STREAM_DEPTH);
         rs2::frame color = fset.first_or_default(RS2_STREAM_COLOR);
 
-        if (depth && color)
+       
+
+        if (depth && color )
         {
             if (auto as_depth = depth.as<rs2::depth_frame>())
                 points = pc.calculate(as_depth);
@@ -489,6 +535,9 @@ int main(int argc, char* argv[]) try {
             app_state.tex.upload(color);
         }
         draw_pointcloud(app.width(), app.height(), app_state, points);
+
+
+       
     }
 
     /* Free resources */
@@ -496,6 +545,11 @@ int main(int argc, char* argv[]) try {
     gst_object_unref(data.pipeline1);
     gst_element_set_state(data.pipeline2, GST_STATE_NULL);
     gst_object_unref(data.pipeline2);
+
+    gst_element_set_state(data.pipeline3, GST_STATE_NULL);
+    gst_object_unref(data.pipeline3);
+    gst_element_set_state(data.pipeline4, GST_STATE_NULL);
+    gst_object_unref(data.pipeline4);
     return 0;
 
 
