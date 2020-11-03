@@ -556,7 +556,7 @@ public:
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glViewport(0, 0, _width, _height);
 
-
+        //glClearColor(153.f / 255, 153.f / 255, 153.f / 255, 1); // Set background color
         glEnable(GL_DEPTH_TEST);
         // Draw the images
         glPushMatrix();
@@ -773,10 +773,18 @@ void draw_pointcloud(float width, float height, glfw_state& app_state, rs2::poin
     // OpenGL commands that prep screen for the pointcloud
     glLoadIdentity();
 
+
+
+
     
     glPushAttrib(GL_ALL_ATTRIB_BITS);
 
+
+
     glClearColor(153.f / 255, 153.f / 255, 153.f / 255, 1);
+
+
+
 
     //glClear(GL_DEPTH_BUFFER_BIT);
 
@@ -799,7 +807,105 @@ void draw_pointcloud(float width, float height, glfw_state& app_state, rs2::poin
     glRotated(app_state.yaw, 0, 1, 0);
     glRotated(app_state.roll, 0, 0, 1);
 
+    glBegin(GL_QUADS);//draw cameras
+//1 TOP----------------------------  
+    glColor3f(0.8f, 0.8f, 0.5f);// set camera color
+    glNormal3f(0.0F, 0.0F, 1.0F);
+    glVertex3f(0.05f, 0.025f, 0.025f);
+    glVertex3f(-0.05f, 0.025f, 0.025f);
+    glVertex3f(-0.05f, -0.025f, 0.025f);
+    glVertex3f(0.05f, -0.025f, 0.025f);
+    //2 Underside----------------------------  
+    glNormal3f(0.0F, 0.0F, -1.0F);
+    glVertex3f(-0.05f, -0.025f, -0.025f);
+    glVertex3f(-0.05f, 0.025f, -0.025f);
+    glVertex3f(0.05f, 0.025f, -0.025f);
+    glVertex3f(0.05f, -0.025f, -0.025f);
+    //3 right----------------------------  
+    glNormal3f(0.0F, 1.0F, 0.0F);
+    glVertex3f(0.05f, 0.025f, 0.025f);
+    glVertex3f(0.05f, 0.025f, -0.025f);
+    glVertex3f(-0.05f, 0.025f, -0.025f);
+    glVertex3f(-0.05f, 0.025f, 0.025f);
+    //4 left ----------------------------  
+    glNormal3f(0.0F, -1.0F, 0.0F);
+    glVertex3f(-0.05f, -0.025f, -0.025f);
+    glVertex3f(0.05f, -0.025f, -0.025f);
+    glVertex3f(0.05f, -0.025f, 0.025f);
+    glVertex3f(-0.05f, -0.025f, 0.025f);
+    //5 front----------------------------  
+    glNormal3f(1.0F, 0.0F, 0.0F);
+    glVertex3f(0.05f, 0.025f, 0.025f);
+    glVertex3f(0.05f, -0.025f, 0.025f);
+    glVertex3f(0.05f, -0.025f, -0.025f);
+    glVertex3f(0.05f, 0.025f, -0.025f);
+    //6 back----------------------------  
+    glNormal3f(-1.0F, 0.0F, 0.0F);
+    glVertex3f(-0.05f, -0.025f, -0.025f);
+    glVertex3f(-0.05f, -0.025f, 0.025f);
+    glVertex3f(-0.05f, 0.025f, 0.025f);
+    glVertex3f(-0.05f, 0.025f, -0.025f);
 
+    glEnd();
+
+
+    float axis_size = 0.1f;
+    float axisWidth = 4.f;
+    // Triangles For X axis
+    glBegin(GL_TRIANGLES);
+    glColor3f(1.0f, 0.0f, 0.0f);
+    glVertex3f(axis_size * 1.1f, 0.f, 0.f);
+    glVertex3f(axis_size, -axis_size * 0.05f, 0.f);
+    glVertex3f(axis_size, axis_size * 0.05f, 0.f);
+    glVertex3f(axis_size * 1.1f, 0.f, 0.f);
+    glVertex3f(axis_size, 0.f, -axis_size * 0.05f);
+    glVertex3f(axis_size, 0.f, axis_size * 0.05f);
+    glEnd();
+
+    // Triangles For Y axis
+    glBegin(GL_TRIANGLES);
+    glColor3f(0.f, 1.f, 0.f);
+    glVertex3f(0.f, axis_size * 1.1f, 0.0f);
+    glVertex3f(0.f, axis_size, 0.05f * axis_size);
+    glVertex3f(0.f, axis_size, -0.05f * axis_size);
+    glVertex3f(0.f, axis_size * 1.1f, 0.0f);
+    glVertex3f(0.05f * axis_size, axis_size, 0.f);
+    glVertex3f(-0.05f * axis_size, axis_size, 0.f);
+    glEnd();
+
+    // Triangles For Z axis
+    glBegin(GL_TRIANGLES);
+    glColor3f(0.0f, 0.0f, 1.0f);
+    glVertex3f(0.0f, 0.0f, 1.1f * axis_size);
+    glVertex3f(0.0f, 0.05f * axis_size, 1.0f * axis_size);
+    glVertex3f(0.0f, -0.05f * axis_size, 1.0f * axis_size);
+    glVertex3f(0.0f, 0.0f, 1.1f * axis_size);
+    glVertex3f(0.05f * axis_size, 0.f, 1.0f * axis_size);
+    glVertex3f(-0.05f * axis_size, 0.f, 1.0f * axis_size);
+    glEnd();
+
+    glLineWidth(axisWidth);
+
+    // Drawing Axis
+    glBegin(GL_LINES);
+    // X axis - Red
+    glColor3f(1.0f, 0.0f, 0.0f);
+    glVertex3f(0.0f, 0.0f, 0.0f);
+    glVertex3f(axis_size, 0.0f, 0.0f);
+
+    // Y axis - Green
+    glColor3f(0.0f, 1.0f, 0.0f);
+    glVertex3f(0.0f, 0.0f, 0.0f);
+    glVertex3f(0.0f, axis_size, 0.0f);
+
+    // Z axis - Blue
+    glColor3f(0.0f, 0.0f, 1.0f);
+    glVertex3f(0.0f, 0.0f, 0.0f);
+    glVertex3f(0.0f, 0.0f, axis_size);
+    glEnd();
+
+
+    glColor3f(1.0f, 1.0f, 1.0f);//Set pointcloud under color
     glPointSize(width / 640);
     //glEnable(GL_DEPTH_TEST);  // enable pointcloud selbst schatten
     glEnable(GL_TEXTURE_2D);
@@ -808,9 +914,8 @@ void draw_pointcloud(float width, float height, glfw_state& app_state, rs2::poin
     glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, tex_border_color);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, 0x812D); // X; GL_CLAMP_TO_EDGE
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, 0x812D); //Y; 0x812F GL_CLAMP_TO_EDGE,0x812D GL_CLAMP_TO_BORDER
+
     glBegin(GL_POINTS);
-
-
     /* this segment actually prints the pointcloud */
     auto vertices = points.get_vertices();              // get vertices
     auto tex_coords = points.get_texture_coordinates(); // and texture coordinates
@@ -826,10 +931,14 @@ void draw_pointcloud(float width, float height, glfw_state& app_state, rs2::poin
 
     // OpenGL cleanup
     glEnd();
+
+
     glPopMatrix();
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
     glPopAttrib();
+
+
 
 }
 
