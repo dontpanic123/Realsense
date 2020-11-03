@@ -6,7 +6,7 @@
 
 #include <algorithm>            // std::min, std::max
 #include <imgui.h>
-#include "imgui_impl_glfw.h"
+//#include "imgui_impl_glfw.h"
 #include <atomic>
 
 // Helper functions
@@ -19,8 +19,8 @@ int main(int argc, char* argv[]) try
 {
     // Create a simple OpenGL window for rendering:
     window app(1280, 720, "RealSense Pointcloud Example");
-   // window app1(1280, 720, "Driver perspective Example");
-    ImGui_ImplGlfw_Init(app, false);
+    
+   // ImGui_ImplGlfw_Init(app, false);
     rs2::context                          ctx;
     std::map<std::string, rs2::colorizer> colorizers; // Declare map from device serial number to colorizer (utility class to convert depth data RGB colorspace)
     std::vector<rs2::pipeline>            pipelines;
@@ -30,17 +30,17 @@ int main(int argc, char* argv[]) try
     {
         serials.push_back(dev.get_info(RS2_CAMERA_INFO_SERIAL_NUMBER));
         cout << "serial_number: " << dev.get_info(RS2_CAMERA_INFO_SERIAL_NUMBER) << endl;
-      
+
     }
     // Start a streaming pipe per each connected device
     for (auto&& serial : serials)
     {
         rs2::pipeline pipe(ctx);
         rs2::config cfg;
-        cfg.enable_stream(RS2_STREAM_COLOR, 424, 240, RS2_FORMAT_RGB8, 30);//RS2_FORMAT_Y16   RS2_FORMAT_BGR8  424 240
-        cfg.enable_stream(RS2_STREAM_DEPTH, 424, 240, RS2_FORMAT_Z16, 30);//RS2_FORMAT_Y16   RS2_FORMAT_BGR8
+        cfg.enable_stream(RS2_STREAM_COLOR, 848, 480, RS2_FORMAT_RGB8, 30);//RS2_FORMAT_Y16   RS2_FORMAT_BGR8  424 240
+        cfg.enable_stream(RS2_STREAM_DEPTH, 848, 480, RS2_FORMAT_Z16, 30);//RS2_FORMAT_Y16   RS2_FORMAT_BGR8
         cfg.enable_device(serial);
-        
+
         pipe.start(cfg);
         pipelines.emplace_back(pipe);
         // Map from each device's serial number to a different colorizer
@@ -66,13 +66,14 @@ int main(int argc, char* argv[]) try
     {
         // Collect the new frames from all the connected devices
         //std::vector<rs2::frame> new_frames;
-      
 
-        //draw_text(10, 20, "camera 1 serial_number: 936322070874");
-        draw_text(10, 40, "camera 2 serial_number: 745412070908");
-        draw_text(10, 60, "camera 3 serial_number: 936322071095");
-        draw_text(10, 80, "camera 4 serial_number: 936322071095");
-       
+
+        draw_text(10, 20, "camera 1 upper_left   serial_number: 745412070908");
+        draw_text(10, 40, "camera 2 upper_right  serial_number: 947522071890");
+        draw_text(10, 60, "camera 3 driver_persp serial_number: 936322070874");
+        draw_text(10, 80, "camera 4 forks_persp   serial_number: 936322071095");
+        draw_text(10, 100, "camera 5 basis_persp   serial_number: 923322072240");
+
         int index = 1; //This index is used to update the displayed point cloud
         for (auto pipe : pipelines)
         {
@@ -102,28 +103,48 @@ int main(int argc, char* argv[]) try
                 draw_pointcloud(1280, 720, app_state, points);
             }
             if (index == 2) {
-                
+                glViewport(0, 0, 1280, 720);
                 app_state1.tex.upload(color);
                 draw_pointcloud(1280, 720, app_state1, points);
             }
             if (index == 3) {
-                
+                glViewport(1000, 0, 1280, 720);
+
+               // glViewport(0, 0, 1280, 720);
                 app_state2.tex.upload(color);
-                //draw_pointcloud(1280, 720, app_state2, points);
+                draw_pointcloud(1280, 720, app_state2, points);
             }
             if (index == 4) {
-                
+                glViewport(0, 0, 1280, 720);
                 app_state3.tex.upload(color);
                 draw_pointcloud(1280, 720, app_state3, points);
             }
             if (index == 5) {
-               
+                glViewport(0, 0, 1280, 720);
                 app_state4.tex.upload(color);
                 draw_pointcloud(1280, 720, app_state4, points);
             }
 
             index++;
         }
+
+       /* bool isVisible = true;
+        if (isVisible)
+        {
+            glViewport(0, 0, 1280, 720);
+            glColor3f(255, 1, 1);
+            GLfloat curSizeLine = 5;
+            glLineWidth(curSizeLine);
+            glBegin(GL_LINE_STRIP);
+            
+            glVertex3f(2.3f, 2.3f, 0.0f);
+            glVertex3f(-2.15f, 2.3f, 0.0f);
+            glVertex3f(25.f, 15.f, 0.0f);
+
+            glEnd();
+
+        }*/
+
         bool print_state = false;// When this variable is true, output the current position status
         app.on_key_release = [&](int key)
         {
@@ -164,9 +185,9 @@ int main(int argc, char* argv[]) try
                 app_state4.offset_x = -10;
                 app_state4.offset_y = 0;
                 app_state4.offset_z = 7;
-                
-               
-               
+
+
+
 
                 print_state = true;
             }
@@ -261,8 +282,8 @@ int main(int argc, char* argv[]) try
 
             if (key == 48) // 0
             {
-                
-               
+
+
                 pc_index = 8;
                 // app_state.yaw = app_state.pitch = 0; app_state.offset_x = app_state.offset_y = 0.0;
             }
@@ -301,7 +322,7 @@ int main(int argc, char* argv[]) try
                 pc_index = 4;
                 //app_state1.yaw = app_state1.pitch = 0; app_state1.offset_x = app_state1.offset_y = 0.0;
             }
-                      
+
             if (key == 87) // w  y rotation +
             {
                 if (pc_index == 0) app_state.pitch += 1;
@@ -521,7 +542,7 @@ int main(int argc, char* argv[]) try
             }
         };
 
-        
+
     }
 
     return EXIT_SUCCESS;
@@ -536,5 +557,3 @@ catch (const std::exception& e)
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
 }
-
-
