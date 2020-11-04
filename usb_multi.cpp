@@ -73,7 +73,10 @@ int main(int argc, char* argv[]) try
         draw_text(10, 60, "camera 3 driver_persp serial_number: 936322070874");
         draw_text(10, 80, "camera 4 forks_persp   serial_number: 936322071095");
         draw_text(10, 100, "camera 5 basis_persp   serial_number: 923322072240");
-
+        draw_text(10, 140, "press the nember keys form one to five to select the point cloud you want to manipulate");
+        draw_text(10, 160, "press the nember keys 0 to select the all point clouds to manipulate");
+        draw_text(10, 200, "rotation           x:w,s       y:a,d       z:q,e");
+        draw_text(10, 220, "translation:       x:y,x       y:c,v       z:r,f");
         int index = 1; //This index is used to update the displayed point cloud
         for (auto pipe : pipelines)
         {
@@ -100,21 +103,24 @@ int main(int argc, char* argv[]) try
             if (index == 1) {
                 glViewport(0, 0, 1280, 720);
                 app_state.tex.upload(color);
-                draw_pointcloud(1280, 720, app_state, points);
+               draw_pointcloud(1280, 720, app_state, points);
             }
             if (index == 2) {
                 glViewport(0, 0, 1280, 720);
                 app_state1.tex.upload(color);
-                draw_pointcloud(1280, 720, app_state1, points);
+                 draw_pointcloud(1280, 720, app_state1, points);
             }
             if (index == 3) {
-                glViewport(1000, 0, 1280, 720);
+                // glViewport(1000, 0, 960, 540);
 
-               // glViewport(0, 0, 1280, 720);
+                glViewport(0, 0, 1280, 720);
                 app_state2.tex.upload(color);
                 draw_pointcloud(1280, 720, app_state2, points);
             }
             if (index == 4) {
+
+                // glViewport(1000, 540, 960, 540);
+
                 glViewport(0, 0, 1280, 720);
                 app_state3.tex.upload(color);
                 draw_pointcloud(1280, 720, app_state3, points);
@@ -151,19 +157,19 @@ int main(int argc, char* argv[]) try
             cout << key << endl;
             if (key == 32) // Escape, move all the pointcloud to a defaut position.
             {
-                app_state.yaw = -3;
-                app_state.pitch = -31;
+                app_state.yaw = -6;
+                app_state.pitch = -43;
                 app_state.roll = 0;
-                app_state.offset_x = -22;
-                app_state.offset_y = -18;
-                app_state.offset_z = 12;
+                app_state.offset_x = -20;
+                app_state.offset_y = -24;
+                app_state.offset_z = 15;
 
                 app_state1.yaw = 2;
-                app_state1.pitch = -29;
+                app_state1.pitch = -37;
                 app_state1.roll = 1;
-                app_state1.offset_x = 1.0;
-                app_state1.offset_y = -16.0;
-                app_state1.offset_z = 14.0;
+                app_state1.offset_x = 0.0;
+                app_state1.offset_y = -21.0;
+                app_state1.offset_z = 12.0;
 
                 app_state2.yaw = 0;
                 app_state2.pitch = -7;
@@ -173,11 +179,11 @@ int main(int argc, char* argv[]) try
                 app_state2.offset_z = -6.0;
 
                 app_state3.yaw = -1;
-                app_state3.pitch = -11;
+                app_state3.pitch = 7;
                 app_state3.roll = 183;
                 app_state3.offset_x = -10.0;
-                app_state3.offset_y = 10.0;
-                app_state3.offset_z = 30.0;
+                app_state3.offset_y = 19.0;
+                app_state3.offset_z = 41.0;
 
                 app_state4.yaw = 0;
                 app_state4.pitch = 0;
@@ -195,33 +201,33 @@ int main(int argc, char* argv[]) try
             if (key == 79) // o, move all the pointcloud to opencv position.
             {
                 cout << "OpenCV position" << endl;
-                app_state.yaw = -3;
-                app_state.pitch = -31;
-                app_state.roll = 0;
-                app_state.offset_x = -22;
-                app_state.offset_y = -18;
-                app_state.offset_z = 12;
+                app_state.yaw = -6.1502;
+                app_state.pitch = -38.8882;
+                app_state.roll = -0.5021;
+                app_state.offset_x = -22.0178;
+                app_state.offset_y = -22.7578;
+                app_state.offset_z = 17.4156;
 
-                app_state1.yaw = 2;
-                app_state1.pitch = -29;
-                app_state1.roll = 1;
-                app_state1.offset_x = 1.0;
-                app_state1.offset_y = -16.0;
-                app_state1.offset_z = 14.0;
+                app_state1.yaw = 0.6730;
+                app_state1.pitch = -37.6007;
+                app_state1.roll = -0.6624;
+                app_state1.offset_x = 1.5844;
+                app_state1.offset_y = -23.08;
+                app_state1.offset_z = 18.1111;
 
-                app_state2.yaw = 0;
-                app_state2.pitch = -7;
-                app_state2.roll = -2;
-                app_state2.offset_x = -11.0;
-                app_state2.offset_y = -4.0;
-                app_state2.offset_z = -6.0;
+                app_state2.yaw = -4,9777;
+                app_state2.pitch = -23,7910;
+                app_state2.roll = -3,4316;
+                app_state2.offset_x = -10.5867;
+                app_state2.offset_y = -22.3267;
+                app_state2.offset_z = -12.6178;
 
-                app_state3.yaw = -1;
-                app_state3.pitch = -11;
-                app_state3.roll = 183;
-                app_state3.offset_x = -10.0;
-                app_state3.offset_y = 10.0;
-                app_state3.offset_z = 30.0;
+                app_state3.yaw = -0.2638;
+                app_state3.pitch = 9.0734;
+                app_state3.roll = -178.6431;
+                app_state3.offset_x = -10.3667;
+                app_state3.offset_y = 24.65;
+                app_state3.offset_z = 45.706;
 
                 app_state4.yaw = 0;
                 app_state4.pitch = 0;
@@ -239,33 +245,33 @@ int main(int argc, char* argv[]) try
             if (key == 75) // K, move all the pointcloud to kalibr position.
             {
                 cout << "Kalibr position" << endl;
-                app_state.yaw = -3;
-                app_state.pitch = -31;
-                app_state.roll = 0;
-                app_state.offset_x = -22;
-                app_state.offset_y = -18;
-                app_state.offset_z = 12;
+                app_state.yaw = 6.2785;
+                app_state.pitch = -38,4940;
+                app_state.roll = 0.3527;
+                app_state.offset_x = -34.2958;
+                app_state.offset_y = -22.325;
+                app_state.offset_z = 15.4583;
 
-                app_state1.yaw = 2;
-                app_state1.pitch = -29;
-                app_state1.roll = 1;
-                app_state1.offset_x = 1.0;
-                app_state1.offset_y = -16.0;
-                app_state1.offset_z = 14.0;
+                app_state1.yaw = 3.9538;
+                app_state1.pitch = -37.0704;
+                app_state1.roll = -0.2495;
+                app_state1.offset_x = 0.7421;
+                app_state1.offset_y = -22.5875;
+                app_state1.offset_z = 13.3770;
 
-                app_state2.yaw = 0;
-                app_state2.pitch = -7;
-                app_state2.roll = -2;
-                app_state2.offset_x = -11.0;
-                app_state2.offset_y = -4.0;
-                app_state2.offset_z = -6.0;
+                app_state2.yaw = -0.9249;
+                app_state2.pitch = -19.1966;
+                app_state2.roll = -3.0028;
+                app_state2.offset_x = -11.2354;
+                app_state2.offset_y = -17.5375;
+                app_state2.offset_z = -13.2917;
 
-                app_state3.yaw = -1;
-                app_state3.pitch = -11;
-                app_state3.roll = 183;
-                app_state3.offset_x = -10.0;
-                app_state3.offset_y = 10.0;
-                app_state3.offset_z = 30.0;
+                app_state3.yaw = -7.3435;
+                app_state3.pitch = 0.6026;
+                app_state3.roll = 178.2782;
+                app_state3.offset_x = -3.6354;
+                app_state3.offset_y = 13.0667;
+                app_state3.offset_z = 37.1167;
 
                 app_state4.yaw = 0;
                 app_state4.pitch = 0;
@@ -279,6 +285,7 @@ int main(int argc, char* argv[]) try
 
                 print_state = true;
             }
+
 
             if (key == 48) // 0
             {
@@ -429,24 +436,7 @@ int main(int argc, char* argv[]) try
                     app_state4.roll += 1;
                 }
             }
-            if (key == 90) // y: x translation+
-            {
-                if (pc_index == 0) app_state.offset_x += 1.f;
-                if (pc_index == 1) app_state1.offset_x += 1.f;
-                if (pc_index == 2) app_state2.offset_x += 1.f;
-                if (pc_index == 3) app_state3.offset_x += 1.f;
-                if (pc_index == 4) app_state4.offset_x += 1.f;
-
-                if (pc_index == 8)
-                {
-                    app_state.offset_x += 1.f;
-                    app_state1.offset_x += 1.f;
-                    app_state2.offset_x += 1.f;
-                    app_state3.offset_x += 1.f;
-                    app_state4.offset_x += 1.f;
-                }
-            }
-            if (key == 88) // x: x translation-
+            if (key == 90) // y: x translation-
             {
                 if (pc_index == 0) app_state.offset_x -= 1.f;
                 if (pc_index == 1) app_state1.offset_x -= 1.f;
@@ -463,31 +453,30 @@ int main(int argc, char* argv[]) try
                     app_state4.offset_x -= 1.f;
                 }
             }
-            if (key == 67) // c: y translation+
+            if (key == 88) // x: x translation+
             {
-                if (pc_index == 0) app_state.offset_y += 1.f;
-                if (pc_index == 1) app_state1.offset_y += 1.f;
-                if (pc_index == 2) app_state2.offset_y += 1.f;
-                if (pc_index == 3) app_state3.offset_y += 1.f;
-                if (pc_index == 4) app_state4.offset_y += 1.f;
+                if (pc_index == 0) app_state.offset_x += 1.f;
+                if (pc_index == 1) app_state1.offset_x += 1.f;
+                if (pc_index == 2) app_state2.offset_x += 1.f;
+                if (pc_index == 3) app_state3.offset_x += 1.f;
+                if (pc_index == 4) app_state4.offset_x += 1.f;
 
                 if (pc_index == 8)
                 {
-                    app_state.offset_y += 1.f;
-                    app_state1.offset_y += 1.f;
-                    app_state2.offset_y += 1.f;
-                    app_state3.offset_y += 1.f;
-                    app_state4.offset_y += 1.f;
+                    app_state.offset_x += 1.f;
+                    app_state1.offset_x += 1.f;
+                    app_state2.offset_x += 1.f;
+                    app_state3.offset_x += 1.f;
+                    app_state4.offset_x += 1.f;
                 }
             }
-            if (key == 86) // v: y translation+
+            if (key == 67) // c: y translation-
             {
                 if (pc_index == 0) app_state.offset_y -= 1.f;
                 if (pc_index == 1) app_state1.offset_y -= 1.f;
                 if (pc_index == 2) app_state2.offset_y -= 1.f;
                 if (pc_index == 3) app_state3.offset_y -= 1.f;
                 if (pc_index == 4) app_state4.offset_y -= 1.f;
-
 
                 if (pc_index == 8)
                 {
@@ -496,6 +485,24 @@ int main(int argc, char* argv[]) try
                     app_state2.offset_y -= 1.f;
                     app_state3.offset_y -= 1.f;
                     app_state4.offset_y -= 1.f;
+                }
+            }
+            if (key == 86) // v: y translation+
+            {
+                if (pc_index == 0) app_state.offset_y += 1.f;
+                if (pc_index == 1) app_state1.offset_y += 1.f;
+                if (pc_index == 2) app_state2.offset_y += 1.f;
+                if (pc_index == 3) app_state3.offset_y += 1.f;
+                if (pc_index == 4) app_state4.offset_y += 1.f;
+
+
+                if (pc_index == 8)
+                {
+                    app_state.offset_y += 1.f;
+                    app_state1.offset_y += 1.f;
+                    app_state2.offset_y += 1.f;
+                    app_state3.offset_y += 1.f;
+                    app_state4.offset_y += 1.f;
                 }
             }
             if (key == 82) // r: z tranlation+
