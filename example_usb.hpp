@@ -772,26 +772,12 @@ void draw_pointcloud(float width, float height, glfw_state& app_state, rs2::poin
 
     // OpenGL commands that prep screen for the pointcloud
     glLoadIdentity();
-
-
-
-
-    
     glPushAttrib(GL_ALL_ATTRIB_BITS);
-
-
-
     glClearColor(153.f / 255, 153.f / 255, 153.f / 255, 1);
-
-
-
-
     //glClear(GL_DEPTH_BUFFER_BIT);
-
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     gluPerspective(60, width / height, 0.1f, 20.0f);
-
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     gluLookAt(0, 0, 0, 0, 0, 1, 0, -1, 0);
@@ -799,7 +785,7 @@ void draw_pointcloud(float width, float height, glfw_state& app_state, rs2::poin
 
 
     glTranslatef(0, -0.5f, 0);
-    glTranslatef(+0.5f + app_state.offset_x * 0.05f, 0, 0);// key button control  --rotation
+    glTranslatef(+0.5f + app_state.offset_x * 0.05f, 0, 0);// key button control  --translation
     glTranslatef(0, +0.5f + app_state.offset_y * 0.05f, 0);
     glTranslatef(0, 0, +0.5f + app_state.offset_z * 0.05f);
 
