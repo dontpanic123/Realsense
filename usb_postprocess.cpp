@@ -68,20 +68,48 @@ int main(int argc, char* argv[]) try
         cout << "serial_number: " << dev.get_info(RS2_CAMERA_INFO_SERIAL_NUMBER) << endl;
 
     }
-    // Start a streaming pipe per each connected device
+  
+     // Start a streaming pipe per each connected device
+    /*
     for (auto&& serial : serials)
     {
         rs2::pipeline pipe(ctx);
         rs2::config cfg;
-        cfg.enable_stream(RS2_STREAM_COLOR, 424, 240, RS2_FORMAT_RGB8, 30);//RS2_FORMAT_Y16   RS2_FORMAT_BGR8  424 240
-        cfg.enable_stream(RS2_STREAM_DEPTH, 424, 240, RS2_FORMAT_Z16, 30);//RS2_FORMAT_Y16   RS2_FORMAT_BGR8
+        cfg.enable_stream(RS2_STREAM_COLOR, 848, 480, RS2_FORMAT_RGB8, 30);//RS2_FORMAT_Y16   RS2_FORMAT_BGR8  424 240
+        cfg.enable_stream(RS2_STREAM_DEPTH, 848, 480, RS2_FORMAT_Z16, 30);//RS2_FORMAT_Y16   RS2_FORMAT_BGR8
         cfg.enable_device(serial);
 
         pipe.start(cfg);
         pipelines.emplace_back(pipe);
         // Map from each device's serial number to a different colorizer
-        colorizers[serial] = rs2::colorizer();
+       // colorizers[serial] = rs2::colorizer();
     }
+    */
+    
+    rs2::pipeline pipe1(ctx);
+    rs2::config cfg;
+    cfg.enable_stream(RS2_STREAM_COLOR, 1280, 720, RS2_FORMAT_RGB8, 30);//RS2_FORMAT_Y16   RS2_FORMAT_BGR8  424 240
+    cfg.enable_stream(RS2_STREAM_DEPTH, 1280, 720, RS2_FORMAT_Z16, 30);//RS2_FORMAT_Y16   RS2_FORMAT_BGR8
+    cfg.enable_device("745412070908");
+    pipe1.start(cfg);
+    pipelines.emplace_back(pipe1);
+
+    rs2::pipeline pipe2(ctx);
+    rs2::config cfg2;
+    cfg2.enable_stream(RS2_STREAM_COLOR, 424, 240, RS2_FORMAT_RGB8, 30);//RS2_FORMAT_Y16   RS2_FORMAT_BGR8  424 240
+    cfg2.enable_stream(RS2_STREAM_DEPTH, 424, 240, RS2_FORMAT_Z16, 30);//RS2_FORMAT_Y16   RS2_FORMAT_BGR8
+    cfg2.enable_device("947522071890");
+    pipe2.start(cfg2);
+    pipelines.emplace_back(pipe2);
+
+    rs2::pipeline pipe3(ctx);
+    rs2::config cfg3;
+    cfg3.enable_stream(RS2_STREAM_COLOR, 424, 240, RS2_FORMAT_RGB8, 30);//RS2_FORMAT_Y16   RS2_FORMAT_BGR8  424 240
+    cfg3.enable_stream(RS2_STREAM_DEPTH, 424, 240, RS2_FORMAT_Z16, 30);//RS2_FORMAT_Y16   RS2_FORMAT_BGR8
+    cfg3.enable_device("923322072240");
+    pipe3.start(cfg3);
+    pipelines.emplace_back(pipe3);
+    
     // Construct an object to manage view state
     glfw_state  app_state;
     glfw_state  app_state1;
@@ -120,8 +148,6 @@ int main(int argc, char* argv[]) try
     filters.emplace_back(disparity_filter_name, depth_to_disparity);
     filters.emplace_back("Spatial", spat_filter);
     filters.emplace_back("Temporal", temp_filter);
-
-
 
     while (app) // Application still alive?
     {
