@@ -26,6 +26,12 @@ rs_server_opengl.cpp      ------      Simultaneously read and display multiple c
 
 usb_multi.cpp   ------      Read and display multiple camera data transmitted via usb at the same time
 
+The initialization process of the camera in usb mode is shown in the figure below
+![image](https://github.com/dontpanic123/Realsense/blob/master/usb_init.png?raw=true)
+
+The visualization process of the camera in usb mode is shown in the figure below
+![image](https://github.com/dontpanic123/Realsense/blob/master/usb_visual.png?raw=true)
+
 usb_postprocess.cpp      ------     Simultaneously read and display multiple camera data transmitted via usb, added multiple point cloud post-processing functions
 
 
