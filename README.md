@@ -22,6 +22,9 @@ gpu_multi_test.cpp     ------     Simultaneous display of multiple point clouds 
 
 gst_multi.cpp       ------      Simultaneously read and display multiple camera data transmitted via Gstreamer
 
+The process of the gst_multi is shown in the figure below
+![image](https://github.com/dontpanic123/Realsense/blob/master/gst_pointcloud.png?raw=true)
+
 rs_server_opengl.cpp      ------      Simultaneously read and display multiple camera data transmitted through rs-server
 
 usb_multi.cpp   ------      Read and display multiple camera data transmitted via usb at the same time
