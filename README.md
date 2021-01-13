@@ -8,7 +8,7 @@ This folder contains a number of codes related to the reconstruction of the blin
 
 
 
-Code function introduction:
+#### Code function introduction:
 
 ***example.h / example_server.hpp / example_usb.hpp***   ------    The header file mainly contains some functions for point cloud rendering in OpenGL. The purpose of having multiple similar header files is that when the parameters of one header file are modified, it will not affect the operation of other programs.
 
