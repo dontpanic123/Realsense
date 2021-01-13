@@ -3,7 +3,7 @@
 #include<opencv2/imgcodecs.hpp>
 #include<opencv2/highgui.hpp>
 #include<opencv2/ccalib/randpattern.hpp>
-#include "opencv2/ccalib/multicalib.hpp"
+#include<opencv2/ccalib/multicalib.hpp>
 #include <opencv2/features2d.hpp>
 #include <string>
 #include <iostream>
@@ -24,28 +24,28 @@ int main(int argc, char** argv)
 
 
 // print random photo
-    
+    /*
     Mat pattern;
-    int width = 1080;
-    int height = 720;
+    int width =4800 ;
+    int height = 3600;
     cv::randpattern::RandomPatternGenerator generator(width, height);
     generator.generatePattern();
     pattern = generator.getPattern();
     namedWindow("figure", WINDOW_AUTOSIZE);
     imshow("figure", pattern);
-    /*imwrite("ramdom_pattern.jpg",pattern); */  
- 
+    imwrite("ramdom_pattern.jpg",pattern);  
+ */
 
-    float patternWidth = 27;
-    float patternHeight = 18;
-    int nMiniMatches = 2;
+    double start_time=static_cast<double>(getTickCount());
+    float patternWidth = 0.76;// unit: m (0.41 or 0.76)
+    float patternHeight = 0.57;// unit: m (0.29 or 0.57)
+    int nMiniMatches = 15;
     int nCamera = 2,  cameraType = 0;
-    int showFeatureExtraction = 0, verbose = 0;//verbose: additional info
+    int showFeatureExtraction = 0, verbose = 1;//verbose: additional info
    // const std::string& inputFilename = "imagelist.xml";
-    const string& inputFilename = "imagelist2.xml";
-    const string& outputFilename = "multi-camera-results2.xml";
-   // vector<string> imagelist;
-   // readStringList(inputFilename, imagelist);
+    const string& inputFilename = "imagelist.yaml";
+    const string& outputFilename = "multi-camera-results.xml";
+
     multicalib::MultiCameraCalibration multiCalib(cameraType,
         nCamera, inputFilename, patternWidth, patternHeight, verbose, 
         showFeatureExtraction, nMiniMatches );
@@ -53,7 +53,9 @@ int main(int argc, char** argv)
     multiCalib.initialize();
     multiCalib.optimizeExtrinsics();
     multiCalib.writeParameters(outputFilename);
-
+    double end_time=static_cast<double>(getTickCount());
+    double c_time=(end_time-start_time)/getTickFrequency();
+    cout<<"programm time:"<<c_time<<endl;
     waitKey(0);
    
  }
